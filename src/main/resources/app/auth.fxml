@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<VBox prefHeight="140.0" prefWidth="300.0" spacing="4" xmlns="http://javafx.com/javafx/" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.geekbrains.chat.controllers.AuthController">
+    <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="17.0" prefWidth="828.0" text="Логин" />
+    <TextField fx:id="loginTF" prefHeight="25.0" prefWidth="428.0" promptText="Логин">
+        <VBox.margin>
+            <Insets left="5.0" right="5.0" />
+        </VBox.margin></TextField>
+    <Label alignment="CENTER" contentDisplay="CENTER" prefHeight="17.0" prefWidth="887.0" text="Пароль" />
+    <PasswordField fx:id="passwordTF" promptText="Пароль">
+        <opaqueInsets>
+            <Insets left="5.0" right="5.0" />
+        </opaqueInsets>
+        <VBox.margin>
+            <Insets bottom="10.0" left="5.0" right="5.0" />
+        </VBox.margin></PasswordField>
+    <HBox prefHeight="25.0" prefWidth="300.0">
+        <Button onAction="#auth" prefHeight="25.0" prefWidth="142.5" text="Войти">
+            <HBox.margin>
+                <Insets left="5.0" />
+            </HBox.margin></Button>
+    </HBox>
+</VBox>
