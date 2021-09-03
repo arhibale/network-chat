@@ -24,12 +24,11 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ChatController {
-    private static final Logger LOG = LogManager.getLogger(AuthController.class.getName());
+    private static final Logger LOG = LogManager.getLogger(ChatController.class.getName());
 
     private Socket socket;
     private DataInputStream in;
