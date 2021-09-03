@@ -5,11 +5,6 @@
 <?import javafx.scene.layout.*?>
 
 <VBox xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.geekbrains.chat.controllers.ChatController">
-      <MenuBar>
-          <Menu mnemonicParsing="false" text="File">
-              <MenuItem mnemonicParsing="false" text="Close" />
-          </Menu>
-      </MenuBar>
     <HBox>
         <VBox>
             <TextArea fx:id="mainTextArea" editable="false" focusTraversable="false" wrapText="true" VBox.vgrow="ALWAYS" />

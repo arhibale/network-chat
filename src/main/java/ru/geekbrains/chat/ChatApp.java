@@ -5,13 +5,11 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import ru.geekbrains.chat.config.Nick;
 
 import java.util.Objects;
 
 public class ChatApp extends Application {
-    private static final Logger LOG = LogManager.getLogger(ChatApp.class.getName());
 
     public static Stage mainStage;
 
@@ -19,10 +17,9 @@ public class ChatApp extends Application {
     public void start(Stage primaryStage) throws Exception {
         mainStage = primaryStage;
         Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("/app/chat.fxml")));
-        primaryStage.setTitle("Message (" + Config.nick + ")");
+        primaryStage.setTitle("Message (" + Nick.nick + ")");
         primaryStage.setScene(new Scene(root, 500, 400));
         primaryStage.setResizable(false);
-        LOG.info("Открытие окна чата...");
         primaryStage.show();
     }
 

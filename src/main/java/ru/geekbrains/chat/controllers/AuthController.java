@@ -8,8 +8,9 @@ import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import ru.geekbrains.chat.Config;
-import ru.geekbrains.chat.ServerConnection;
+import ru.geekbrains.chat.config.Commands;
+import ru.geekbrains.chat.config.Nick;
+import ru.geekbrains.chat.service.ServerConnection;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -17,7 +18,6 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -43,17 +43,16 @@ public class AuthController {
         singleService.execute(() -> {
             try {
                 while (true) {
-                    LOG.info("Ожидание ответа от сервера...");
                     String strFromServer = in.readUTF();
-                    if (strFromServer.startsWith("/authok")) {
-                        Config.nick = strFromServer.split(" ")[1];
+                    if (strFromServer.startsWith("/" + Commands.AUTHOK)) {
+                        Nick.nick = strFromServer.split(" ")[1];
                         Platform.runLater(() -> {
                             Stage stage = (Stage) loginTF.getScene().getWindow();
                             stage.close();
                         });
-                        LOG.info("Успешная авторизация...");
+                        LOG.info("Успешная авторизация!");
                         break;
-                    } else if (strFromServer.startsWith("/warn")) {
+                    } else if (strFromServer.startsWith("/" + Commands.WARN)) {
                         String warn = strFromServer.split(":")[1];
                         Platform.runLater(() -> {
                             Alert alert = new Alert(Alert.AlertType.WARNING);
@@ -61,8 +60,8 @@ public class AuthController {
                             alert.setHeaderText("Введены неккоректные данные");
                             alert.setContentText(warn);
                             alert.show();
-                            LOG.warn("Введены неккоректные данные: {}", warn);
                         });
+                        LOG.info("Проблемы при авторизации...");
                     }
                 }
             } catch (EOFException | SocketException e) {
@@ -74,13 +73,12 @@ public class AuthController {
                     alert.showAndWait();
                     Stage stage = (Stage) loginTF.getScene().getWindow();
                     stage.close();
-                    LOG.fatal("Непредвиденная ошибка! {}", e.getMessage());
-                    LOG.fatal(Arrays.toString(e.getStackTrace()));
                 });
+                closeConnection();
+                LOG.warn("Отключение от сервера...");
             } catch (Exception e) {
                 e.printStackTrace();
-                LOG.fatal("Непредвиденная ошибка! {}", e.getMessage());
-                LOG.fatal(Arrays.toString(e.getStackTrace()));
+                closeConnection();
             }
         });
         singleService.shutdown();
@@ -90,14 +88,23 @@ public class AuthController {
         Socket socket = ServerConnection.getSocket();
         in = new DataInputStream(socket.getInputStream());
         out = new DataOutputStream(socket.getOutputStream());
-        LOG.info("Открытие соединения с сервером...");
+    }
+
+    private void closeConnection() {
+        try {
+            in.close();
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
     private void auth() throws IOException {
-        String authString = "/auth " + loginTF.getText() + " " + passwordTF.getText();
+        String authString = String.format("/%s %s %s", Commands.AUTH, loginTF.getText(), passwordTF.getText());
+        LOG.info("Попытка авторизации...");
+        System.out.println(authString);
         out.writeUTF(authString);
-        LOG.info("Отправка серверу логина и пароля...");
     }
 }
 

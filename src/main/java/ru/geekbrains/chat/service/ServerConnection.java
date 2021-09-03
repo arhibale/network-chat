@@ -1,4 +1,4 @@
-package ru.geekbrains.chat;
+package ru.geekbrains.chat.service;
 
 import java.io.IOException;
 import java.net.Socket;

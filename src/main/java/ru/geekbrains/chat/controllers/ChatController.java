@@ -13,9 +13,10 @@ import javafx.stage.WindowEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import ru.geekbrains.chat.ChatApp;
-import ru.geekbrains.chat.ChatHistory;
-import ru.geekbrains.chat.Config;
-import ru.geekbrains.chat.ServerConnection;
+import ru.geekbrains.chat.config.Commands;
+import ru.geekbrains.chat.service.ChatHistory;
+import ru.geekbrains.chat.config.Nick;
+import ru.geekbrains.chat.service.ServerConnection;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -28,7 +29,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ChatController {
-    private static final Logger LOG = LogManager.getLogger(ChatController.class.getName());
+    private static final Logger LOG = LogManager.getLogger(AuthController.class.getName());
+
     private Socket socket;
     private DataInputStream in;
     private DataOutputStream out;
@@ -72,29 +74,23 @@ public class ChatController {
                 ChatHistory historyController = new ChatHistory();
                 historyController.openChatHistory(mainTextArea);
                 while (socket.isConnected()) {
-                    LOG.info("Ожидание ответа сервера...");
                     String strFromServer = in.readUTF();
-                    historyController.recordChatHistory(strFromServer);
-                    LOG.info("Ответ сервера: {}", strFromServer);
-                    if (strFromServer.startsWith("/end")) {
+                    if (strFromServer.startsWith("/" + Commands.END)) {
                         return;
-                    } else if (strFromServer.startsWith("/nn")) {
+                    } else if (strFromServer.startsWith("/" + Commands.NN)) {
                         setTitleForNick(strFromServer);
                         continue;
-                    } else if (strFromServer.startsWith("/clients")) {
+                    } else if (strFromServer.startsWith("/" + Commands.CLIENTS)) {
                         clientsList(strFromServer);
                         continue;
                     }
+                    historyController.recordChatHistory(strFromServer);
                     printMessage(strFromServer);
                 }
             } catch (EOFException | SocketException e) {
                 closeWindow();
-                LOG.fatal("Непредвиденная ошибка! {}", e.getMessage());
-                LOG.fatal(Arrays.toString(e.getStackTrace()));
             } catch (IOException e) {
                 e.printStackTrace();
-                LOG.fatal("Непредвиденная ошибка! {}", e.getMessage());
-                LOG.fatal(Arrays.toString(e.getStackTrace()));
             } finally {
                 closeConnection();
             }
@@ -104,17 +100,17 @@ public class ChatController {
 
     private void setTitleForNick(String str) {
         Platform.runLater(() -> {
-            Config.nick = str.split(" ")[1];
-            ChatApp.mainStage.setTitle("Message (" + Config.nick + ")");
             LOG.info("Смена никнейма...");
+            Nick.nick = str.split(" ")[1];
+            ChatApp.mainStage.setTitle("Message (" + Nick.nick + ")");
         });
     }
 
     private void openConnection() throws IOException {
+        LOG.info("Подключение к серверу...");
         socket = ServerConnection.getSocket();
         in = new DataInputStream(socket.getInputStream());
         out = new DataOutputStream(socket.getOutputStream());
-        LOG.info("Открытие соединения с сервером...");
     }
 
     private void addCloseListener() {
@@ -128,36 +124,30 @@ public class ChatController {
     }
 
     private void closeConnection() {
+        LOG.warn("Отключение от сервера...");
         try {
             socket.close();
             out.close();
             in.close();
-            LOG.info("Закрытие подключения с сервером...");
         } catch (IOException e) {
             e.printStackTrace();
-            LOG.fatal("Непредвиденная ошибка! {}", e.getMessage());
-            LOG.fatal(Arrays.toString(e.getStackTrace()));
         }
     }
 
     @FXML
     private void sendMessage() {
+        LOG.info("Отправка сообщения...");
         if (!textField.getText().trim().isEmpty()) {
             try {
                 out.writeUTF(textField.getText().trim());
-                LOG.info("Отправка сообщения на сервер: {}", textField.getText().trim());
                 textField.clear();
                 textField.requestFocus();
             } catch (SocketException e) {
                 openErrorWindow();
                 closeWindow();
                 e.printStackTrace();
-                LOG.fatal("Непредвиденная ошибка! {}", e.getMessage());
-                LOG.fatal(Arrays.toString(e.getStackTrace()));
             } catch (IOException e) {
                 e.printStackTrace();
-                LOG.fatal("Непредвиденная ошибка! {}", e.getMessage());
-                LOG.fatal(Arrays.toString(e.getStackTrace()));
             }
         }
     }
@@ -165,7 +155,6 @@ public class ChatController {
     private void printMessage(String str) {
         if (!str.trim().isEmpty()) {
             mainTextArea.appendText(str.trim() + "\n");
-            LOG.info("Печать сообщения на главное окно: {}", str);
         }
     }
 
@@ -173,7 +162,6 @@ public class ChatController {
         Platform.runLater(() -> {
             Stage stage = (Stage) mainTextArea.getScene().getWindow();
             stage.close();
-            LOG.warn("Закрытие окна...");
         });
     }
 
@@ -183,18 +171,16 @@ public class ChatController {
             alert.setTitle("Ошибка подключения");
             alert.setHeaderText("Ошибка подключения!");
             alert.setContentText("Разрыв соединения");
-            LOG.warn("Открытие окна ошибки...");
             alert.showAndWait();
         });
     }
 
     private void clientsList(String strFromServer) {
         Platform.runLater(() -> {
-            String str = strFromServer.split("/clients")[1];
+            String str = strFromServer.split("/" + Commands.CLIENTS)[1];
             String[] str2 = str.split(":");
             users.getItems().clear();
             users.getItems().addAll(str2);
-            LOG.info("Обновление списка пользователей...");
         });
     }
 }
